@@ -28,19 +28,23 @@
 (defvar *players* ())
 (defun define-player (a b c d)
   "defines a single player, with storage space for pending actions"
-  (let ((name a) (current-move "") (current-action "") (sock d))
+  (let ((name a) (coords (list 0 0 0)) (current-action "") (sock d))
     (return-from define-player (list
       :get-name (lambda () name)
       :get-sock (lambda () sock)
-      :get-move (lambda () current-move)
+      :move (lambda (direction) current-move)
+      :get-coords (lambda () current-move)
       :get-action (lambda () current-action)
       :set-move (lambda (mov) (setf current-move act) current-move)
       :set-action (lambda (act) (setf current-action act) current-action)))))
-
-;(defun match-start (song)
-;  (let ((init-time (encode-universal-time 0 0 0 1 1 1970 0)))
+;(encode-universal-time 0 0 0 1 1 1970 0)
+(defun match-start (song)
+  (let ((init-time (get-unix-time)))
 ;    (bordeaux-threads:make-thread
-;      (dolist song
+      (dolist (node song) (loop until (>= (get-unix-time) (+ init-time (list-exec node :get-time))))
+        (format t "iteration~%"))))
+
+;)
 
 
 
@@ -91,8 +95,8 @@
 
 
 
-
-(defvar *tempo* 250)
+;(match-start *taking-over*)
+(defvar *tempo* 350)
 (defvar *taking-over* (list
   (define-node (* 0 *tempo*) 0 50 0)
   (define-node (* 1 *tempo*) 1 50 0)
@@ -175,3 +179,19 @@
   (define-node (* 78 *tempo*) 2 50 0)
   (define-node (* 79 *tempo*) 3 50 0)
 ))
+
+
+
+(GET-INTERNAL-REAL-TIME)
+;;time
+(defvar *unix-epoch-difference*
+  (* 1000 (encode-universal-time 0 0 0 1 1 1970 0)))
+
+(defun universal-to-unix-time (universal-time)
+  (- universal-time *unix-epoch-difference*))
+
+(defun unix-to-universal-time (unix-time)
+  (+ unix-time *unix-epoch-difference*))
+
+(defun get-unix-time ()
+  (universal-to-unix-time (GET-INTERNAL-REAL-TIME)))

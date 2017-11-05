@@ -10,7 +10,7 @@ var key_a;
 var key_s;
 var key_d;
 var key_f;
-var left_key = "";
+var direction = "";
 
 var key_h;
 var key_j;
@@ -25,17 +25,17 @@ function preload() {}
 
 function create() {
     key_a = game.input.keyboard.addKey(Phaser.Keyboard.A);
-    key_a.onDown.add(press_a, this);
-    key_a.onUp.add(un_press_a, this);
+    key_a.onDown.add(move, this);
+    key_a.onUp.add(move, this);
     key_s = game.input.keyboard.addKey(Phaser.Keyboard.S);
-    key_s.onDown.add(press_s, this);
-    key_s.onUp.add(un_press_s, this);
+    key_s.onDown.add(move, this);
+    key_s.onUp.add(move, this);
     key_d = game.input.keyboard.addKey(Phaser.Keyboard.D);
-    key_d.onDown.add(press_d, this);
-    key_d.onUp.add(un_press_d, this);
-    key_f = game.input.keyboard.addKey(Phaser.Keyboard.D);
-    key_f.onDown.add(press_d, this);
-    key_f.onUp.add(un_press_d, this);
+    key_d.onDown.add(move, this);
+    key_d.onUp.add(move, this);
+    key_f = game.input.keyboard.addKey(Phaser.Keyboard.F);
+    key_f.onDown.add(move, this);
+    key_f.onUp.add(move, this);
 
     key_h = game.input.keyboard.addKey(Phaser.Keyboard.H);
     key_h.onDown.add(press_h, this);
@@ -69,7 +69,7 @@ function create() {
 function update() {
     if (change && name != "not set") {
         change = false;
-        exampleSocket.send(name + ":" + left_key + ":" + right_key);
+        exampleSocket.send(name + ":" + direction + ":" + right_key);
     }
 
 }
@@ -78,44 +78,19 @@ function render() {
 
 }
 
-function press_a(event) {
-    change = true;
-    left_key = "A";
-}
-function un_press_a(event) {
-    change = true;
-    if(left_key == "A") {
-        left_key = "";
-    }
-}
-function press_s(event) {
-    change = true;
-    left_key = "S";
-}
-function un_press_s(event) {
-    change = true;
-    if(left_key == "S") {
-        left_key = "";
-    }
-}
-function press_d(event) {
-    change = true;
-    left_key = "D";
-}
-function un_press_d(event) {
-    change = true;
-    if(left_key == "D") {
-        left_key = "";
-    }
-}
-function press_f(event) {
-    change = true;
-    left_key = "F";
-}
-function un_press_f(event) {
-    change = true;
-    if(left_key == "F") {
-        left_key = "";
+function move(event) {
+    var old_direction = direction;
+    if(key_a.isDown){
+        if(key_s.isDown) {direction = "SW";}
+        else if (key_d.isDown) {direction = "NW"}
+        else {direction = " W";}
+    } else if (key_f.isDown) {
+        if(key_s.isDown) {direction = "SE";}
+        else if (key_d.isDown) {direction = "NE"}
+        else {direction = " E";}
+    } else {direction = "  ";}
+    if (direction != old_direction){
+        change = true;
     }
 }
 
