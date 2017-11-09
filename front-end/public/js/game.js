@@ -10,13 +10,13 @@ var key_a;
 var key_s;
 var key_d;
 var key_f;
-var direction = "";
+var direction = "  ";
 
 var key_h;
 var key_j;
 var key_k;
 var key_l;
-var right_key = "";
+var right_key = " ";
 
 var change = true;
 var name = "not set";
@@ -101,7 +101,7 @@ function press_h(event) {
 function un_press_h(event) {
     change = true;
     if(right_key == "H") {
-        right_key = "";
+        right_key = " ";
     }
 }
 function press_j(event) {
@@ -111,7 +111,7 @@ function press_j(event) {
 function un_press_j(event) {
     change = true;
     if(right_key == "J") {
-        right_key = "";
+        right_key = " ";
     }
 }
 function press_k(event) {
@@ -121,7 +121,7 @@ function press_k(event) {
 function un_press_k(event) {
     change = true;
     if(right_key == "K") {
-        right_key = "";
+        right_key = " ";
     }
 }
 function press_l(event) {
@@ -131,6 +131,6 @@ function press_l(event) {
 function un_press_l(event) {
     change = true;
     if(right_key == "L") {
-        right_key = "";
+        right_key = " ";
     }
 }

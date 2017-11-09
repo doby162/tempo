@@ -16,33 +16,41 @@
       :get-time (lambda () milis)
       :get-chord (lambda () chord)
       :get-intensity (lambda () intensity)
-      :get-direction (lambda () direction)
+      :get-direction (lambda (dir) (setf direction dir) direction)
       :get-actions (lambda () actions)
       :set-actions (lambda (act) (setf actions act) actions)))))
 
-(defun list-exec (ls ex &optional (n -1))
+(defun list-exec (ls ex &optional (args '()) (n -1))
   "takes a plist and a :property-name and executes the funcion at that location. Optionally operates on the :property of a list at nth of the given list"
   (unless (= -1 n) (setf ls (nth n ls)))
+  (when args (return-from list-exec (funcall (getf ls ex) args)))
+(format t "this should not go")
   (funcall (getf ls ex)))
+
 
 (defvar *players* ())
 (defun define-player (a b c d)
   "defines a single player, with storage space for pending actions"
-  (let ((name a) (coords (list 0 0 0)) (current-action "") (sock d))
+  (let ((name a) (coords (list 0 0 0)) (current-move "") (current-action "") (sock d))
     (return-from define-player (list
       :get-name (lambda () name)
       :get-sock (lambda () sock)
       :move (lambda (direction) current-move)
       :get-coords (lambda () current-move)
+      :get-status (lambda () (concatenate 'string name ":" coords ":" current-action))
       :get-action (lambda () current-action)
-      :set-move (lambda (mov) (setf current-move act) current-move)
-      :set-action (lambda (act) (setf current-action act) current-action)))))
+      :set-move (lambda (mov) (setf current-move mov) current-move)
+      :set-action (lambda (act) (setf current-action act)(format t "~a~%" act) current-action)))))
 ;(encode-universal-time 0 0 0 1 1 1970 0)
 (defun match-start (song)
+(format t "match start")
   (let ((init-time (get-unix-time)))
 ;    (bordeaux-threads:make-thread
       (dolist (node song) (loop until (>= (get-unix-time) (+ init-time (list-exec node :get-time))))
-        (format t "iteration~%"))))
+        (format t "iteration~%")
+        (let ((status "~"))
+        (dolist (player *players*) (list-exec player :move)(setf status (concat 'string status (list-exec player :get-status) "~")))
+        (broadcast (car *chat-rooms*) status)))))
 
 ;)
 
@@ -84,7 +92,20 @@
   (parse message))
 
 (defun parse (message)
-  (format t "~a~%" message))
+(format t "parse start~%")
+  (format t "~a~%" message)
+  (let ((name (subseq message 0 1))(direction (subseq message 2 4))(right-key (subseq message 5 6)));split string on ;
+(format t "got this far")
+    (dolist (player *players*)
+      (when (equalp name (list-exec player :get-name))
+(format t "this far")
+        ;(list-exec player :set-move direction)
+(format t "this far")
+        (list-exec player :set-action right-key)
+(format t "parse end~%")
+        (return-from parse t)))))
+
+
 
 (defvar *server* (make-instance 'hunchensocket:websocket-acceptor :port 12345))
 (hunchentoot:start *server*)
