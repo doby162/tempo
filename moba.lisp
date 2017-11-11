@@ -24,7 +24,6 @@
   "takes a plist and a :property-name and executes the funcion at that location. Optionally operates on the :property of a list at nth of the given list"
   (unless (= -1 n) (setf ls (nth n ls)))
   (when args (return-from list-exec (funcall (getf ls ex) args)))
-(format t "this should not go")
   (funcall (getf ls ex)))
 
 
@@ -35,22 +34,32 @@
     (return-from define-player (list
       :get-name (lambda () name)
       :get-sock (lambda () sock)
-      :move (lambda (direction) current-move)
-      :get-coords (lambda () current-move)
-      :get-status (lambda () (concatenate 'string name ":" coords ":" current-action))
+      :move (lambda ()
+              (when (equalp "NE" current-move) (incf (second coords)) (decf (third coords)))
+              (when (equalp " E" current-move) (incf (first coords)) (decf (third coords)))
+              (when (equalp "SE" current-move) (incf (first coords)) (decf (second coords)))
+              (when (equalp "SW" current-move) (incf (third coords)) (decf (second coords)))
+              (when (equalp " W" current-move) (incf (third coords)) (decf (first coords)))
+              (when (equalp "NW" current-move) (incf (second coords)) (decf (first coords))) coords)
+      :get-coords (lambda () coords)
+      :get-status (lambda () (format nil "~a:~a:~a" name coords current-action))
       :get-action (lambda () current-action)
       :set-move (lambda (mov) (setf current-move mov) current-move)
-      :set-action (lambda (act) (setf current-action act)(format t "~a~%" act) current-action)))))
-;(encode-universal-time 0 0 0 1 1 1970 0)
+      :set-action (lambda (act) (setf current-action act) current-action)))))
+
 (defun match-start (song)
 (format t "match start")
   (let ((init-time (get-unix-time)))
 ;    (bordeaux-threads:make-thread
       (dolist (node song) (loop until (>= (get-unix-time) (+ init-time (list-exec node :get-time))))
         (format t "iteration~%")
-        (let ((status "~"))
-        (dolist (player *players*) (list-exec player :move)(setf status (concat 'string status (list-exec player :get-status) "~")))
-        (broadcast (car *chat-rooms*) status)))))
+        (let ((status "-"))
+        (dolist (player *players*)
+          (list-exec player :move)
+          (setf status (concatenate 'string status (list-exec player :get-status) "-")))
+        (list-exec node :set-actions status)
+        (broadcast (car *chat-rooms*) status)
+))))
 
 ;)
 
@@ -92,17 +101,12 @@
   (parse message))
 
 (defun parse (message)
-(format t "parse start~%")
   (format t "~a~%" message)
   (let ((name (subseq message 0 1))(direction (subseq message 2 4))(right-key (subseq message 5 6)));split string on ;
-(format t "got this far")
     (dolist (player *players*)
       (when (equalp name (list-exec player :get-name))
-(format t "this far")
-        ;(list-exec player :set-move direction)
-(format t "this far")
+        (list-exec player :set-move direction)
         (list-exec player :set-action right-key)
-(format t "parse end~%")
         (return-from parse t)))))
 
 
