@@ -3,6 +3,7 @@
   (:use :sb-ext)
   (:use :hunchensocket)
   (:export :init)
+  (:export :start)
   (:export :test))
 (in-package :moba)
 (defvar *input* ())
@@ -40,7 +41,7 @@
               (when (equalp "SE" current-move) (incf (first coords)) (decf (second coords)))
               (when (equalp "SW" current-move) (incf (third coords)) (decf (second coords)))
               (when (equalp " W" current-move) (incf (third coords)) (decf (first coords)))
-              (when (equalp "NW" current-move) (incf (second coords)) (decf (first coords))) coords)
+              (when (equalp "NW" current-move) (incf (second coords)) (decf (first coords))) (format t "~a~%" coords) coords)
       :get-coords (lambda () coords)
       :get-status (lambda () (format nil "~a:~a:~a" name coords current-action))
       :get-action (lambda () current-action)
@@ -53,13 +54,16 @@
 ;    (bordeaux-threads:make-thread
       (dolist (node song) (loop until (>= (get-unix-time) (+ init-time (list-exec node :get-time))))
         (format t "iteration~%")
-        (let ((status "-"))
+        (let ((status "^"))
         (dolist (player *players*)
           (list-exec player :move)
-          (setf status (concatenate 'string status (list-exec player :get-status) "-")))
+          (setf status (concatenate 'string status (list-exec player :get-status) "^")))
         (list-exec node :set-actions status)
         (broadcast (car *chat-rooms*) status)
 ))))
+
+(defun start () (match-start *taking-over*))
+;(moba:start)
 
 ;)
 

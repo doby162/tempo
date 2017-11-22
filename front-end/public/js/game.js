@@ -1,8 +1,6 @@
 'use strict';
 var socket;
 
-
-
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload: preload, create: create, update: update, render: render });
 var exampleSocket;
 
@@ -21,7 +19,11 @@ var right_key = " ";
 var change = true;
 var name = "not set";
 
-function preload() {}
+var players = [];
+
+function preload() {
+    game.load.spritesheet('blue', 'assets/blue.png', 32, 32);
+}
 
 function create() {
     key_a = game.input.keyboard.addKey(Phaser.Keyboard.A);
@@ -57,13 +59,42 @@ function create() {
     }
 
     exampleSocket.onmessage = function (event) {
-        console.log(event.data);
         if (name == "not set") {
             name = event.data;
+        } else {
+            var messages = event.data.split("^");
+            for (var i = 0; i < messages.length; i++)
+            {
+                var units = messages[i].split(":");
+                if (units[0] !== ""){
+                    if (!playerExists(units[0])){
+                        console.log("asdf");
+                        players.push(units);
+                        var player = game.add.sprite(32, 32, 'blue');
+                        players[players.length -1][3] = player;
+                        console.log("here");
+                        console.log(players[players.length -1][3]);
+                    }
+                    for (var i = 0; i < players.length; i++) {
+                        if (units[0] == players[i][0]) {
+                            players[i][1] = units[1];
+                            players[i][2] = units[2];
+                        }
+                    }
+                }
+            }
         }
-        //exampleSocket.send("Here's some text that the server is urgently awaiting!");
     }
 
+}
+
+function playerExists(name) {
+    for (var i = 0; i < players.length; i++) {
+        if (name == players[i][0]) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function update() {
@@ -72,6 +103,29 @@ function update() {
         exampleSocket.send(name + ":" + direction + ":" + right_key);
     }
 
+    for (var i = 0; i < players.length; i++) {
+        var message = players[i][1];
+        var player = players[i][3];
+
+        var coords = message.split("(")[1];
+        coords = coords.split(")")[0];
+        coords = coords.split(" ");
+
+        var x = 0;
+        var y = 0;
+
+        y = y - (50 * coords[1]);
+
+        y = y - (25 * coords[0]);
+        y = y - (25 * coords[2]);
+
+        x = x + (25 * coords[0]);
+        x = x - (25 * coords[2]);
+
+
+        player.y = y;
+        player.x = x;
+    }
 }
 
 function render() {
