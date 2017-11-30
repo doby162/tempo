@@ -68,17 +68,14 @@ function create() {
                 var units = messages[i].split(":");
                 if (units[0] !== ""){
                     if (!playerExists(units[0])){
-                        console.log("asdf");
                         players.push(units);
                         var player = game.add.sprite(32, 32, 'blue');
                         players[players.length -1][3] = player;
-                        console.log("here");
-                        console.log(players[players.length -1][3]);
                     }
-                    for (var i = 0; i < players.length; i++) {
-                        if (units[0] == players[i][0]) {
-                            players[i][1] = units[1];
-                            players[i][2] = units[2];
+                    for (var pl = 0; pl < players.length; pl++) {
+                        if (units[0] == players[pl][0]) {
+                            players[pl][1] = units[1];
+                            players[pl][2] = units[2];
                         }
                     }
                 }
