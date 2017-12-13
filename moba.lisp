@@ -27,6 +27,8 @@
   (when args (return-from list-exec (funcall (getf ls ex) args)))
   (funcall (getf ls ex)))
 
+(defun collide (x y)
+  (dolist (terra *terrain*) (when (and (= x (first terra)) (= y (second terra))) (return-from collide nil))) t)
 
 (defvar *players* ())
 (defun define-player (a b c d)
@@ -36,12 +38,12 @@
       :get-name (lambda () name)
       :get-sock (lambda () sock)
       :move (lambda ()
-              (when (equalp "NE" current-move) (incf (second coords)) (decf (third coords)))
-              (when (equalp " E" current-move) (incf (first coords)) (decf (third coords)))
-              (when (equalp "SE" current-move) (incf (first coords)) (decf (second coords)))
-              (when (equalp "SW" current-move) (incf (third coords)) (decf (second coords)))
-              (when (equalp " W" current-move) (incf (third coords)) (decf (first coords)))
-              (when (equalp "NW" current-move) (incf (second coords)) (decf (first coords))) (format t "~a~%" coords) coords)
+              (when (and (equalp "NE" current-move) (collide (first coords) (+ 1 (second coords)))) (incf (second coords)) (decf (third coords)))
+              (when (and (equalp " E" current-move) (collide (+ 1 (first coords)) (second coords))) (incf (first coords)) (decf (third coords)))
+              (when (and (equalp "SE" current-move) (collide (+ 1 (first coords)) (- 1 (second coords)))) (incf (first coords)) (decf (second coords)))
+              (when (and (equalp "SW" current-move) (collide (first coords) (- 1 (second coords)))) (incf (third coords)) (decf (second coords)))
+              (when (and (equalp " W" current-move) (collide (- 1 (first coords)) (second coords))) (incf (third coords)) (decf (first coords)))
+              (when (and (equalp "NW" current-move) (collide (- 1 (first coords)) (+ 1 (first coords)))) (incf (second coords)) (decf (first coords))) (format t "~a~%" coords) coords)
       :get-coords (lambda () coords)
       :get-status (lambda () (format nil "~a:~a:~a" name coords current-action))
       :get-action (lambda () current-action)
@@ -58,9 +60,16 @@
         (dolist (player *players*)
           (list-exec player :move)
           (setf status (concatenate 'string status (list-exec player :get-status) "^")))
+        (setf status (concatenate 'string status (get-terrain *terrain*) "^"))
         (list-exec node :set-actions status)
         (broadcast (car *chat-rooms*) status)
 ))))
+
+(defun get-terrain (terrain)
+  (let ((status "") (counter 0))
+    (dolist (terra terrain)
+      (setf counter (+ counter 1))
+      (setf status (concatenate 'string status (format nil "rock~a:(~a ~a ~a): ^" counter (first terra) (second terra) (third terra))))) status))
 
 (defun start () (match-start *taking-over*))
 ;(moba:start)
@@ -85,6 +94,7 @@
 (pushnew 'find-room hunchensocket:*websocket-dispatch-table*)
 
 (defun broadcast (room message &rest args)
+(format t "~a~%" message)
   (loop for peer in (hunchensocket:clients room)
         do (hunchensocket:send-text-message peer (apply #'format nil message args))))
 
@@ -126,6 +136,13 @@
 
 ;(match-start *taking-over*)
 (defvar *tempo* 350)
+(defvar *map-taking-over*
+  (list
+    (list 7 -2 -5)
+    (list 2 5 -3)
+    (list 3 4 -3)
+    (list 4 0 -4)))
+(defvar *terrain* *map-taking-over*)
 (defvar *taking-over* (list
   (define-node (* 0 *tempo*) 0 50 0)
   (define-node (* 1 *tempo*) 1 50 0)
