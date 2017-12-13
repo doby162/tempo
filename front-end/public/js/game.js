@@ -23,6 +23,7 @@ var players = [];
 
 function preload() {
     game.load.spritesheet('blue', 'assets/blue.png', 32, 32);
+    game.load.spritesheet('sheet', 'assets/poke_tiles.png', 32, 32);
 }
 
 function create() {
@@ -69,7 +70,12 @@ function create() {
                 if (units[0] !== ""){
                     if (!playerExists(units[0])){
                         players.push(units);
-                        var player = game.add.sprite(32, 32, 'blue');
+                        if(units[0].includes("rock")) {
+                            var player = game.add.sprite(64, 64, 'sheet');
+                            player.frame = 40;
+                        } else {
+                            var player = game.add.sprite(32, 32, 'blue');
+                        }
                         players[players.length -1][3] = player;
                     }
                     for (var pl = 0; pl < players.length; pl++) {
